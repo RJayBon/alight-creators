@@ -1,0 +1,22 @@
+# Block PHP execution
+<FilesMatch "\.(php|php3|php4|php5|php7|php8|phtml|pl|py|jsp|asp|aspx|sh|cgi)$">
+    Require all denied
+</FilesMatch>
+
+# Block hotlinking (referrer check)
+# Whitelists: your own domains + all private/local IP ranges
+RewriteEngine On
+RewriteCond %{HTTP_REFERER} !^$
+RewriteCond %{HTTP_REFERER} !^https?://localhost(/.*)?$ [NC]
+RewriteCond %{HTTP_REFERER} !^https?://127\.0\.0\.1(/.*)?$ [NC]
+RewriteCond %{HTTP_REFERER} !^https?://192\.168\.\d+\.\d+(/.*)?$ [NC]
+RewriteCond %{HTTP_REFERER} !^https?://10\.\d+\.\d+\.\d+(/.*)?$ [NC]
+RewriteCond %{HTTP_REFERER} !^https?://172\.(1[6-9]|2\d|3[01])\.\d+\.\d+(/.*)?$ [NC]
+RewriteCond %{HTTP_REFERER} !^https?://(www\.)?alight-creators\.xo\.je(/.*)?$ [NC]
+RewriteRule \.(jpg|jpeg|png|gif|webp|mp4|webm|ogg|mov)$ - [F,NC]
+
+# Content-Disposition
+<FilesMatch "\.(jpg|jpeg|png|gif|webp|mp4|webm|ogg|mov)$">
+    Header set Content-Disposition "inline"
+    Header set X-Content-Type-Options "nosniff"
+</FilesMatch>

@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("tutorial-form");
   if (!form) return;
 
-    /* ============================================================
+  /* ============================================================
      CUSTOM ANIMATED SELECT
      ============================================================ */
   document.querySelectorAll('.custom-select').forEach((wrapper) => {
@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
       li.addEventListener('click', (e) => {
         e.stopPropagation();
         native.value = li.dataset.value;
-        /* Fire `change` so tutorial-form.js's preview-badge handler runs */
+        /* Fire `change` so the preview-badge handler runs */
         native.dispatchEvent(new Event('change', { bubbles: true }));
         syncFromNative();
         close();
@@ -230,7 +230,7 @@ document.addEventListener("DOMContentLoaded", () => {
       stepDiv.className = "step-box";
       stepDiv.innerHTML = `
         <div class="step-header">
-          <span class="step-label">Step ${stepCount}</span>
+          <span data-step-number>Step ${stepCount}</span>
           <button type="button" class="btn-remove-step">🗑 Remove</button>
         </div>
         <div class="field" style="margin-bottom: 1rem;">
@@ -259,7 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
       stepCount = 0;
       boxes.forEach((box) => {
         stepCount++;
-        box.querySelector(".step-label").textContent = "Step " + stepCount;
+        box.querySelector("[data-step-number]").textContent = "Step " + stepCount;
       });
     }
 

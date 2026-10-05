@@ -2,14 +2,6 @@
    Alight Creators — Global UI utilities + loading states
    ============================================================ */
 
-/* ---------- Nav highlight ---------- */
-function highlightNav() {
-  const path = location.pathname.split("/").pop() || "index.php";
-  document.querySelectorAll(".nav-links a").forEach(a => {
-    if (a.getAttribute("href") === path) a.classList.add("active");
-  });
-}
-
 /* ---------- User dropdown ---------- */
 function setupUserDropdown() {
   const menu = document.getElementById("user-menu");
@@ -211,7 +203,6 @@ window.setButtonLoading = function (btn, on) {
    INIT
    ============================================================ */
 document.addEventListener("DOMContentLoaded", () => {
-  highlightNav();
   setupUserDropdown();
   initPageLoader();
   initTopProgress();

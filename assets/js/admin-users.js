@@ -12,7 +12,6 @@
   const els = {
     form:       document.getElementById('admin-search-form'),
     input:      document.getElementById('admin-search-input'),
-    submitBtn:  document.getElementById('admin-search-btn'),
     rows:       document.getElementById('admin-user-rows'),
     pagination: document.getElementById('admin-pagination'),
     prevBtn:    document.getElementById('admin-page-prev'),
@@ -110,8 +109,6 @@
     const ctrl = new AbortController();
     inFlight = ctrl;
 
-    setButtonLoading(els.submitBtn, true);
-
     const params = new URLSearchParams({
       ajax: '1',
       q:    els.input.value.trim(),
@@ -130,7 +127,6 @@
       if (err.name !== 'AbortError') console.error('[admin-users] fetch failed:', err);
     } finally {
       if (inFlight === ctrl) inFlight = null;
-      setButtonLoading(els.submitBtn, false);
     }
   }
 

@@ -1,0 +1,32 @@
+# ============================================================
+# Alight Creators — block direct HTTP access to /config/
+# ============================================================
+# The files inside this folder are PHP helpers, not pages.
+# They are meant to be `require`d by page scripts, never fetched
+# directly by a browser. This rule guarantees they can't be.
+#
+# Credentials, session helpers, and password-reset logic all live
+# here — this file is the last line of defense if the server ever
+# mis-executes a request for one of them.
+# ============================================================
+
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>
+
+# Belt-and-suspenders: reject any direct request that slipped past
+# the authz check (some Apache setups override AllowOverride).
+<FilesMatch "\.(php|phtml|phar|sql|ini|log|env)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

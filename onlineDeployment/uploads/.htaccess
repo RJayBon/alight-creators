@@ -1,8 +1,0 @@
-php_flag engine off
-Options -ExecCGI -Indexes
-
-<FilesMatch "\.(php|php3|php4|php5|php7|phtml|phar|pl|py|cgi|asp|aspx|sh|shtml)$">
-    Require all denied
-</FilesMatch>
-
-AddType application/octet-stream .php .phtml .phar .pl .py .cgi .asp

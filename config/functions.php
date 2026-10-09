@@ -29,6 +29,7 @@ function upload_file($file, string $dir, array $allowedExts, int $maxBytes, stri
         'png'  => ['image/png'],
         'gif'  => ['image/gif'],
         'webp' => ['image/webp'],
+        'avif' => ['image/avif'],
         'mp4'  => ['video/mp4', 'application/mp4'],
         'webm' => ['video/webm'],
         'ogg'  => ['video/ogg', 'application/ogg'],
@@ -58,6 +59,90 @@ function upload_file($file, string $dir, array $allowedExts, int $maxBytes, stri
     if (!move_uploaded_file($file['tmp_name'], $dest)) {
         throw new RuntimeException('Could not move uploaded file.');
     }
+
+    @chmod($dest, 0644);
+    return $dest;
+}
+
+/* ============================================================
+   WEBP IMAGE UPLOAD — converts JPG/PNG/GIF/WebP/AVIF to WebP
+   ============================================================ */
+
+function upload_image_as_webp(
+    $file,
+    string $dir,
+    int $maxBytes = 2 * 1024 * 1024,
+    int $quality = 82,
+    string $prefix = 'img'
+): ?string {
+    if (!$file || !isset($file['error']) || $file['error'] === UPLOAD_ERR_NO_FILE) {
+        return null;
+    }
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        throw new RuntimeException('Upload failed (error code ' . $file['error'] . ').');
+    }
+    if ($file['size'] > $maxBytes) {
+        throw new RuntimeException('File is too large.');
+    }
+
+    /* Fallback if GD/WebP isn't available */
+    if (!function_exists('imagewebp')) {
+        return upload_file($file, $dir, ['jpg','jpeg','png','gif','webp','avif'], $maxBytes, $prefix);
+    }
+
+    /* Detect real MIME */
+    if (function_exists('finfo_open')) {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime  = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+    } else {
+        $mime = $file['type'] ?? '';
+    }
+
+    $allowedMimes = [
+        'image/jpeg' => 'imagecreatefromjpeg',
+        'image/png'  => 'imagecreatefrompng',
+        'image/gif'  => 'imagecreatefromgif',
+        'image/webp' => 'imagecreatefromwebp',
+        'image/avif' => 'imagecreatefromavif',
+    ];
+
+    if (!isset($allowedMimes[$mime])) {
+        throw new RuntimeException('Unsupported image type: ' . $mime);
+    }
+
+    $loader = $allowedMimes[$mime];
+    if (!function_exists($loader)) {
+        throw new RuntimeException("This server can't read {$mime} files.");
+    }
+
+    $img = @$loader($file['tmp_name']);
+    if (!$img) {
+        throw new RuntimeException('Could not read the image file.');
+    }
+
+    /* Preserve alpha transparency */
+    imagepalettetotruecolor($img);
+    imagealphablending($img, true);
+    imagesavealpha($img, true);
+
+    /* Ensure destination folder exists */
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true)) {
+        imagedestroy($img);
+        throw new RuntimeException("Upload folder '$dir' could not be created.");
+    }
+
+    /* Generate unique .webp filename */
+    $newName = $prefix . '_' . time() . '_' . bin2hex(random_bytes(6)) . '.webp';
+    $dest    = rtrim($dir, '/') . '/' . $newName;
+
+    if (!imagewebp($img, $dest, $quality)) {
+        imagedestroy($img);
+        throw new RuntimeException('Could not write WebP file.');
+    }
+    imagedestroy($img);
+
+    @chmod($dest, 0644);
     return $dest;
 }
 
@@ -114,37 +199,19 @@ function sanitize_url(?string $url): ?string
     return $url;
 }
 
-/**
- * Returns a cache-busting version string for the main stylesheet.
- * Uses the file's mtime so the browser only re-downloads when the
- * CSS actually changes — not on every single request.
- */
 function css_version(): string
 {
-    $file = __DIR__ . '/../assets/css/styles.css';
-    return is_file($file) ? (string)filemtime($file) : '1';
+    return (string)time();
 }
 
 /* ============================================================
    VIDEO EMBED
    ============================================================ */
 
-/**
- * Convert a YouTube URL to its embeddable form.
- * Supports:
- *   https://www.youtube.com/watch?v=VIDEO_ID
- *   https://youtube.com/embed/VIDEO_ID
- *   https://youtu.be/VIDEO_ID
- *   https://www.youtube.com/shorts/VIDEO_ID
- */
 function youtube_embed(?string $url): ?string
 {
     if (!$url) return null;
-    if (preg_match(
-        '~(?:youtube\.com/(?:watch\?v=|embed/|shorts/)|youtu\.be/)([A-Za-z0-9_-]{11})~',
-        $url,
-        $m
-    )) {
+    if (preg_match('~(?:youtube\.com/(?:watch\?v=|embed/)|youtu\.be/)([A-Za-z0-9_-]{11})~', $url, $m)) {
         return 'https://www.youtube.com/embed/' . $m[1];
     }
     return null;
@@ -272,28 +339,17 @@ function get_popular_tutorials(PDO $pdo, int $limit = 6, ?int $exclude_id = null
    AUTHORIZATION
    ============================================================ */
 
-/**
- * True when the current session belongs to an admin user.
- */
 function is_admin(): bool
 {
     return isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
 }
 
-/**
- * True when the current user may manage (edit/delete) the given tutorial.
- * Owner OR admin.
- */
 function can_manage_tutorial(array $tutorial): bool
 {
     if (!isset($_SESSION['user_id'])) return false;
     if (is_admin()) return true;
     return (int)$tutorial['user_id'] === (int)$_SESSION['user_id'];
 }
-
-/* ============================================================
-   ADMIN GATE
-   ============================================================ */
 
 function require_admin(): void
 {
@@ -313,20 +369,13 @@ function require_admin(): void
    PASSWORD RESET
    ============================================================ */
 
-/**
- * Generate a fresh reset token for a user.
- * Returns the plain token (to embed in the link), not the hash.
- * Invalidates any earlier unused tokens for the same user.
- */
 function create_password_reset(PDO $pdo, int $user_id, int $ttl_minutes = 15): string
 {
-    // Invalidate older unused tokens
     $pdo->prepare("
         DELETE FROM password_resets
         WHERE user_id = ? AND used_at IS NULL
     ")->execute([$user_id]);
 
-    // Plain token goes to the user; hash goes to the DB
     $token      = bin2hex(random_bytes(32));
     $token_hash = hash('sha256', $token);
     $expires_at = (new DateTime())->modify("+{$ttl_minutes} minutes")->format('Y-m-d H:i:s');
@@ -339,10 +388,6 @@ function create_password_reset(PDO $pdo, int $user_id, int $ttl_minutes = 15): s
     return $token;
 }
 
-/**
- * Look up a valid reset row for the given plain token.
- * Returns ['reset_id' => int, 'user_id' => int] or null.
- */
 function find_valid_reset(PDO $pdo, string $token): ?array
 {
     if ($token === '' || !preg_match('/^[a-f0-9]{64}$/', $token)) {
@@ -366,9 +411,6 @@ function find_valid_reset(PDO $pdo, string $token): ?array
     return ['reset_id' => (int)$row['reset_id'], 'user_id' => (int)$row['user_id']];
 }
 
-/**
- * Mark a reset row as used and update the user's password in one transaction.
- */
 function consume_password_reset(PDO $pdo, int $reset_id, int $user_id, string $new_password): void
 {
     $pdo->beginTransaction();

@@ -273,6 +273,28 @@ $category_list = [
             </div>
           <?php endif; ?>
 
+          <?php if ($has_result): ?>
+            <div class="mobile-result-block">
+              <h3 class="mobile-result-title">Final Result</h3>
+              <?php if ($has_result_file): ?>
+                <video controls class="mobile-result-video">
+                  <source src="<?= safe($tutorial['result_video_file']) ?>" />
+                </video>
+              <?php elseif ($result_embed): ?>
+                <div class="mobile-result-video">
+                  <iframe src="<?= safe($result_embed) ?>" frameborder="0" allowfullscreen></iframe>
+                </div>
+              <?php else: ?>
+                <a href="<?= safe($tutorial['result_video_url']) ?>"
+                   target="_blank"
+                   rel="noopener"
+                   class="mobile-result-link">
+                  ▶ Watch Result Video
+                </a>
+              <?php endif; ?>
+            </div>
+          <?php endif; ?>
+
           <div class="rating-block">
             <div class="rating-block-header">
               <h3>Rate This Tutorial</h3>

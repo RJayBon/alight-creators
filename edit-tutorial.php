@@ -43,7 +43,6 @@ $stepStmt = $pdo->prepare("SELECT * FROM tutorial_steps WHERE tutorial_id = ? OR
 $stepStmt->execute([$tutorial_id]);
 $steps = $stepStmt->fetchAll();
 
-/* ---- Load existing resources ---- */
 $resStmt = $pdo->prepare("
     SELECT resource_type, resource_name, resource_url
     FROM tutorial_resources
@@ -91,8 +90,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!empty($tutorial['thumbnail_path'])) $files_to_delete[] = $tutorial['thumbnail_path'];
                     $newValues['thumbnail_path'] = null;
                 } else {
-                    $up = upload_file($_FILES['thumbnail'] ?? null, 'uploads/thumbnails',
-                                      ['jpg','jpeg','png','gif','webp'], 2 * 1024 * 1024, 'tut');
+                    $up = upload_image_as_webp($_FILES['thumbnail'] ?? null, 'uploads/thumbnails',
+                                               2 * 1024 * 1024, 82, 'tut');
                     if ($up) {
                         if (!empty($tutorial['thumbnail_path'])) $files_to_delete[] = $tutorial['thumbnail_path'];
                         $newValues['thumbnail_path'] = $up;
@@ -126,7 +125,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
-                /* ---- Steps ---- */
                 $stepTitles = $_POST['step_title'] ?? [];
                 $stepDescs  = $_POST['step_desc'] ?? [];
                 $cleaned = [];
@@ -139,7 +137,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new RuntimeException("Please add at least one complete step.");
                 }
 
-                /* ---- Resources ---- */
                 $resourceTypes = $_POST['resource_type'] ?? [];
                 $resourceNames = $_POST['resource_name'] ?? [];
                 $resourceUrls  = $_POST['resource_url']  ?? [];
@@ -179,7 +176,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stepStmt->execute([$tutorial_id, $n, $st, $sd]);
                 }
 
-                /* ---- Replace resources ---- */
                 $pdo->prepare("DELETE FROM tutorial_resources WHERE tutorial_id = ?")
                     ->execute([$tutorial_id]);
 
@@ -225,7 +221,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-/* AJAX callers get JSON errors instead of HTML */
 if ($is_ajax && $messageType === 'error' && $message !== '') {
     header('Content-Type: application/json');
     echo json_encode(['ok' => false, 'error' => $message]);
@@ -251,7 +246,6 @@ $steps_json = json_encode(array_map(fn($s) => [
     'desc'  => $s['step_description'],
 ], $steps), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
 
-/* ---- Resources → JSON for the form builder ---- */
 $resources_json = json_encode(array_map(fn($r) => [
     'type' => $r['resource_type'],
     'name' => $r['resource_name'],
@@ -372,7 +366,7 @@ $resources_json = json_encode(array_map(fn($r) => [
                         <label for="thumbnail_upload" class="btn-outline thumbnail-upload-label">
                           <?= !empty($tutorial['thumbnail_path']) ? 'Replace image' : 'Choose image' ?>
                         </label>
-                        <input type="file" id="thumbnail_upload" name="thumbnail" accept="image/png, image/jpeg, image/gif, image/webp" style="display: none;" />
+                        <input type="file" id="thumbnail_upload" name="thumbnail" accept="image/png, image/jpeg, image/gif, image/webp, image/avif" style="display: none;" />
                       </div>
 
                       <?php if (!empty($tutorial['thumbnail_path'])): ?>
@@ -416,7 +410,6 @@ $resources_json = json_encode(array_map(fn($r) => [
 
                 <div id="steps_container"></div>
 
-                <!-- ============ Downloads & Assets ============ -->
                 <div class="form-section-header resource-section-header">
                   <h3>Downloads &amp; Assets</h3>
                   <button type="button" id="btn_add_resource" class="btn-outline btn-add-step">+ Add resource</button>

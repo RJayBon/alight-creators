@@ -1,4 +1,4 @@
-@font-face{font-family:'Varela Round';src:url('../fonts/VarelaRound-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+@import url('https://fonts.googleapis.com/css2?family=Varela+Round&display=swap');
 :root{--background:210 30% 6%;--foreground:210 25% 95%;--card:215 25% 9%;--primary:190 100% 50%;--primary-foreground:210 30% 6%;--secondary:281 84% 65%;--accent:165 100% 50%;--muted:215 20% 16%;--muted-foreground:215 14% 60%;--destructive:0 84% 60%;--destructive-foreground:0 0% 100%;--border:215 14% 22%;--shadow-glow:0 0 20px hsl(190 100% 50% / 0.4);--shadow-card:0 10px 30px hsl(0 0% 0% / 0.5);--gradient-hero:linear-gradient(135deg,hsl(215 25% 11%) 0%,hsl(210 30% 6%) 100%);color-scheme:dark}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:hsl(var(--background));color:hsl(var(--foreground));font-family:'Varela Round',sans-serif;min-height:100%;line-height:1.5}
@@ -688,3 +688,10 @@ input.input-invalid:focus{border-color:hsl(var(--destructive))!important;box-sha
 @media (max-width:640px){.tut-back-btn{font-size:.75rem;padding:.4rem .75rem .4rem .65rem;margin-bottom:.75rem}}
 .tutorial-thumb,.profile-banner,.avatar-preview-full,.admin-user-avatar,.tut-author-avatar,.user-avatar,.creator-avatar-circle img,.preview-video-placeholder{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;pointer-events:none}
 .tutorial-card .tutorial-thumb,a .tut-author-avatar,a .user-avatar{pointer-events:auto}
+.mobile-result-block {display: block;margin: 1.5rem 0 2rem;padding: 1.25rem;border: 1px solid hsl(var(--border));border-radius: 14px;background: hsl(var(--card));}
+.mobile-result-title {font-size: 1rem;font-weight: 700;color: hsl(var(--foreground));margin-bottom: .75rem;}
+.mobile-result-video {display: block;width: 100%;aspect-ratio: 16 / 9;border-radius: 10px;overflow: hidden;background: hsl(var(--background));}
+.mobile-result-video iframe {display: block;width: 100%;height: 100%;border: 0;}
+.mobile-result-link {display: inline-flex;align-items: center;gap: .4rem;padding: .65rem 1rem;border-radius: 8px;background: hsl(var(--primary) / 0.12);border: 1px solid hsl(var(--primary) / 0.4);color: hsl(var(--primary));font-size: .875rem;font-weight: 600;text-decoration: none;transition: all .18s ease;}
+.mobile-result-link:hover {background: hsl(var(--primary));color: hsl(var(--primary-foreground));}
+@media (min-width: 1024px) {.mobile-result-block { display: none; }}

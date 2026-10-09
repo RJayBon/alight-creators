@@ -138,11 +138,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
-                $new_avatar = upload_file(
+                $new_avatar = upload_image_as_webp(
                     $_FILES['avatar'] ?? null,
                     'uploads/avatars',
-                    ['jpg','jpeg','png','gif','webp'],
                     2 * 1024 * 1024,
+                    85,
                     'user_' . $target_id
                 );
                 if ($new_avatar) {
@@ -152,11 +152,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $params[]    = $new_avatar;
                 }
 
-                $new_banner = upload_file(
+                $new_banner = upload_image_as_webp(
                     $_FILES['banner'] ?? null,
                     'uploads/banners',
-                    ['jpg','jpeg','png','gif','webp'],
                     4 * 1024 * 1024,
+                    82,
                     'banner_' . $target_id
                 );
                 if ($new_banner) {
@@ -186,12 +186,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $sql = "UPDATE users SET " . implode(', ', $sql_parts) . " WHERE user_id = ?";
                 $pdo->prepare($sql)->execute($params);
 
-                /* ---- Sync session for self-edits ----
-                   Keeps $_SESSION['username'] and $_SESSION['role']
-                   aligned with the DB row after a self-update. This
-                   is defensive: an admin who edits their own profile
-                   (or a role change that happens out-of-band) can't
-                   leave a stale value cached in the session. */
                 if ($is_self) {
                     $_SESSION['username'] = $handle;
 
@@ -306,7 +300,7 @@ $form_action  = 'profile.php' . ($admin_mode ? '?id=' . (int)$target_id : '');
                   <span>Change Banner</span>
                 </div>
               </div>
-              <input type="file" id="banner_upload" name="banner" accept="image/png, image/jpeg, image/gif, image/webp" style="display:none;" />
+              <input type="file" id="banner_upload" name="banner" accept="image/png, image/jpeg, image/gif, image/webp, image/avif" style="display:none;" />
               <p class="field-help" style="margin-top: .5rem;">Recommended: 1200 × 300 (4:1). Max 4 MB.</p>
 
               <?php if ($has_banner): ?>
@@ -330,7 +324,7 @@ $form_action  = 'profile.php' . ($admin_mode ? '?id=' . (int)$target_id : '');
                     <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
                   </svg>
                 </label>
-                <input type="file" id="avatar_upload" name="avatar" accept="image/png, image/jpeg, image/gif, image/webp" style="display:none;" />
+                <input type="file" id="avatar_upload" name="avatar" accept="image/png, image/jpeg, image/gif, image/webp, image/avif" style="display:none;" />
               </div>
               <p class="field-help">Allowed: JPG, PNG, GIF. Max 2MB.</p>
 

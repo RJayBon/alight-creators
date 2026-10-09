@@ -43,11 +43,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST)) {
         } else {
             $uploaded = [];
             try {
-                $thumbnail_path = upload_file(
+                $thumbnail_path = upload_image_as_webp(
                     $_FILES['thumbnail'] ?? null,
                     'uploads/thumbnails',
-                    ['jpg','jpeg','png','gif','webp'],
-                    2 * 1024 * 1024, 'tut'
+                    2 * 1024 * 1024,
+                    82,
+                    'tut'
                 );
                 if ($thumbnail_path) $uploaded[] = $thumbnail_path;
 
@@ -67,7 +68,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST)) {
                 );
                 if ($result_video_file) $uploaded[] = $result_video_file;
 
-                /* ---- Steps ---- */
                 $stepTitles = $_POST['step_title'] ?? [];
                 $stepDescs  = $_POST['step_desc'] ?? [];
                 $cleaned = [];
@@ -80,7 +80,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST)) {
                     throw new RuntimeException("Please add at least one complete step.");
                 }
 
-                /* ---- Resources (presets & assets) ---- */
                 $resourceTypes = $_POST['resource_type'] ?? [];
                 $resourceNames = $_POST['resource_name'] ?? [];
                 $resourceUrls  = $_POST['resource_url']  ?? [];
@@ -155,7 +154,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST)) {
     }
 }
 
-/* AJAX callers get JSON errors instead of HTML */
 if ($is_ajax && $messageType === 'error' && $message !== '') {
     header('Content-Type: application/json');
     echo json_encode(['ok' => false, 'error' => $message]);
@@ -251,7 +249,7 @@ if ($is_ajax && $messageType === 'error' && $message !== '') {
                           <img id="thumb_preview_img" src="" alt="Thumbnail Preview" class="thumb-preview-img" />
                         </div>
                         <label for="thumbnail_upload" class="btn-outline thumbnail-upload-label">Choose image</label>
-                        <input type="file" id="thumbnail_upload" name="thumbnail" accept="image/png, image/jpeg, image/gif, image/webp" style="display: none;" />
+                        <input type="file" id="thumbnail_upload" name="thumbnail" accept="image/png, image/jpeg, image/gif, image/webp, image/avif" style="display: none;" />
                       </div>
                     </div>
                   </div>
@@ -278,7 +276,6 @@ if ($is_ajax && $messageType === 'error' && $message !== '') {
 
                 <div id="steps_container"></div>
 
-                <!-- ============ Downloads & Assets ============ -->
                 <div class="form-section-header resource-section-header">
                   <h3>Downloads &amp; Assets</h3>
                   <button type="button" id="btn_add_resource" class="btn-outline btn-add-step">+ Add resource</button>
